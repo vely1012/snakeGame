@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>snake</title>
+    <style>
+        body {
+            font-family: monospace;
+        }
+        .wrapper {
+            margin: 0 auto;
+        }
+        .game__title {
+            text-align: center;
+        }        
+        .game__field {
+            --cell-size: 40px;
+            display: grid;
+            grid-template-columns: repeat(15, var(--cell-size));
+            grid-auto-rows: var(--cell-size);
+            justify-content: center;
+            
+            border: 3px solid rgb(45, 0, 113);
+        }
+
+        .game__field-cell {
+            grid-column: span 1;
+            grid-row: span 1;
+            box-sizing: border-box;
+            background-color: gray;
+            border: 3px solid black;
+
+            background-size: contain;
+            background-position: center center;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <main class="game">
+            <h1 class="game__title">Snake game</h1>
+            <div class="game__field">
+            </div>
+        </main>
+    </div>
+    <script>
+        const _gameDisplay = document.querySelector(".game__field");
+        const emptyCell = `<div class="game__field-cell"></div>`;
+        let size = 15;
+        
+        const getDisplayCell = (x, y) => _gameDisplay.children[x % size + (y % size) * size];
+        const clearDisplayCell = (x, y) => { getDisplayCell(x, y).removeAttribute("style"); }
+        
+
+        for(let i = 0; i < size ** 2; i++) {
+            _gameDisplay.innerHTML += emptyCell;
+        }
+
+        class SnakeGame {
+            constructor(fieldSize=10, gameObjects=[]) {
+                this.gameField = Array.from(Array(fieldSize), ()=>Array(fieldSize));
+                this.gameObjects = gameObjects;
+            }
+
+            render() {
+                for(let gameObj of this.gameObjects) {
+                    gameObj.render();
+                }
+            }
+        }
+
+        class GameObject{
+            constructor(x, y, skin) {
+                this.x = x;
+                this.y = y;
+                this.skin = skin;
+            }
+
+            render() {
+                let cell = getDisplayCell(this.x, this.y);
+                cell.style.setProperty('background-image', `url(${this.skin})`);
+            }
+        }
+
+        class SnakeSegment extends GameObject {
+            constructor(x, y) {
+                super(x, y, "./sources/svg/snake_segment.svg");
+            }
+
+            render() {
+                super.render();
+            }
+
+            move(x, y) {
+                this.x = x;
+                this.y = y;
+            }
+        }
+
+        class SnakeObject extends GameObject {
+            constructor(headX, headY, startingLength=3) {
+                super(headX, headY, "./sources/svg/snake_head.svg");
+                this.segments = [];
+                for(let i = 0; i < startingLength - 1; i++) {
+                    this.segments.push(new SnakeSegment(headX, headY + 1 + i));
+                }
+            }
+
+            render() {
+                for(let segment of this.segments) {
+                    segment.render();
+                }
+                super.render();
+            }
+
+            move(direction) {
+                let lastPos = this.segments[this.segments.length - 1];
+                clearDisplayCell(lastPos.x, lastPos.y);
+                
+                for(let i = this.segments.length - 1; i > 0; i--) {
+                    let pos = this.segments[i - 1]; 
+                    this.segments[i].move(pos.x, pos.y);
+                }
+                this.segments[0].move(this.x, this.y);
+                switch(direction) {
+                    case 'up':
+                        this.y--;
+                        break;
+                    case 'right':
+                        this.x++;
+                        break;
+                    case 'down':
+                        this.y++;
+                        break;
+                    case 'left':
+                        this.x--;
+                        break;
+                }
+                this.render();
+            }
+        }
+
+        let apple = new GameObject(43, 48, './sources/svg/apple.svg');
+        let snake = new SnakeObject(50, 50, 4);
+        let snakeGame = new SnakeGame(fieldSize=size, gameObjects=[apple, snake]);
+        snakeGame.render();
+        document.addEventListener('keypress', function(event) {
+            // let key = event.key;
+            switch(event.key) {
+                case 'w':
+                    snake.move('up');
+                    break;
+                case 'd':
+                    snake.move('right');
+                    break;
+                case 's':
+                    snake.move('down');
+                    break;
+                case 'a':
+                    snake.move('left');
+                    break;
+            }
+        });
+    </script>
+</body>
+</html>
