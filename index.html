@@ -11,11 +11,17 @@
         .wrapper {
             margin: 0 auto;
         }
+
+        .game {
+            height: 100vh;
+        }
+
         .game__title {
             text-align: center;
         }        
         .game__field {
-            --cell-size: 40px;
+            height: 80%;
+            --cell-size: 5vh;
             display: grid;
             grid-template-columns: repeat(15, var(--cell-size));
             grid-auto-rows: var(--cell-size);
@@ -40,6 +46,10 @@
     <div class="wrapper">
         <main class="game">
             <h1 class="game__title">Snake game</h1>
+            <div class="game__stats">
+                <span class="game__score"></span>
+                <span class="game__record"></span>
+            </div>
             <div class="game__field">
             </div>
         </main>
@@ -74,6 +84,10 @@
             constructor(x, y, skin) {
                 this.x = x;
                 this.y = y;
+                this.position = {
+                    x: this.x,
+                    y: this.y
+                }
                 this.skin = skin;
             }
 
@@ -102,8 +116,12 @@
             constructor(headX, headY, startingLength=3) {
                 super(headX, headY, "./sources/svg/snake_head.svg");
                 this.segments = [];
+                // this.segments = new Map();
+                this.currentDirection = "up";
                 for(let i = 0; i < startingLength - 1; i++) {
+                    let newSegment = new SnakeSegment(headX, headY + 1 + i);
                     this.segments.push(new SnakeSegment(headX, headY + 1 + i));
+                    // this.segments.set(newSegment.position, newSegment);
                 }
             }
 
@@ -115,6 +133,7 @@
             }
 
             move(direction) {
+                this.currentDirection = direction;
                 let lastPos = this.segments[this.segments.length - 1];
                 clearDisplayCell(lastPos.x, lastPos.y);
                 
@@ -139,28 +158,46 @@
                 }
                 this.render();
             }
+
+            checkFood() {
+
+            }
+
+            checkCollision() {
+
+            }
         }
 
         let apple = new GameObject(43, 48, './sources/svg/apple.svg');
-        let snake = new SnakeObject(50, 50, 4);
+        apple.render();
+        let snake = new SnakeObject(50, 50, 3);
         let snakeGame = new SnakeGame(fieldSize=size, gameObjects=[apple, snake]);
         snakeGame.render();
+
+        let keyDirection = "up";
+        const keyDirectionSheet = {
+            "w": "up",
+            "d": "right",
+            "s": "down",
+            "a": "left"
+        }
+        const oppositeDirections = {
+            "up": "down",
+            "down": "up",
+            "left": "right",
+            "right": "left"
+        }
+
+        let gameCycle = setInterval(() => {
+            snake.move(keyDirection);
+        }, 100);
+
         document.addEventListener('keypress', function(event) {
-            // let key = event.key;
-            switch(event.key) {
-                case 'w':
-                    snake.move('up');
-                    break;
-                case 'd':
-                    snake.move('right');
-                    break;
-                case 's':
-                    snake.move('down');
-                    break;
-                case 'a':
-                    snake.move('left');
-                    break;
+            let pressedDirection = keyDirectionSheet[event.key];
+            if(oppositeDirections[pressedDirection] === keyDirection) {
+                return;
             }
+            keyDirection = pressedDirection;
         });
     </script>
 </body>
