@@ -1,0 +1,59 @@
+body {
+    font-family: monospace;
+}
+.wrapper {
+    margin: 0 auto;
+}
+
+.game {
+    height: 100vh;
+}
+
+.game__title {
+    text-align: center;
+}
+
+.game__stats {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 20px 0;
+}
+
+.game__stat {
+    font-size: 20px;
+    position: relative;
+}
+
+.game__stat::after {
+    content: attr(data-value);
+    position: absolute;
+    right: -40px;
+}
+
+.game__stat {
+    display: block;
+
+}
+
+.game__field {
+    height: 80%;
+    --cell-size: 5vh;
+    display: grid;
+    grid-template-columns: repeat(15, var(--cell-size));
+    grid-auto-rows: var(--cell-size);
+    justify-content: center;
+    
+    border: 3px solid rgb(45, 0, 113);
+}
+
+.game__field-cell {
+    grid-column: span 1;
+    grid-row: span 1;
+    box-sizing: border-box;
+    background-color: gray;
+    border: 3px solid black;
+
+    background-size: contain;
+    background-position: center center;
+}
