@@ -1,6 +1,5 @@
 class GameObject {
-    static renderCallback() { }
-
+    
     constructor(x, y, skin) {
         this.x = x;
         this.y = y;
@@ -9,12 +8,12 @@ class GameObject {
             y: this.y
         }
         this.skin = skin;
+
+        this.renderCallback = f => f;
     }
 
     render(x=this.x, y=this.y, graphics=this.skin) {
         GameObject.renderCallback(x, y, graphics);
-        // let cell = getDisplayCell(this.x, this.y);
-        // cell.style.setProperty('background-image', `url(${this.skin})`);
     }
 
     move(x, y) {
@@ -24,20 +23,19 @@ class GameObject {
 }
 
 class SnakeObject extends GameObject {
-    constructor(x=0, y=0, startingLength=3, initialDirection="right") {
+    constructor(x=2, y=0, startingLength=3, initialDirection="right") {
         super(x, y, "./sources/svg/snake_head.svg");
         this.currentDirection = initialDirection;
         this.segments = [];
-        // this.segments = new Map();
-        for (let i = 0; i < startingLength - 1; i++) {
-            // this.segments.push(new GameObject(headX, headY + 1 + i, "./sources/svg/snake_segment.svg"));
-            // this.segments.set(newSegment.position, newSegment);
-            // this.segments.push({ x: headX, y: headY + 1 + i});
-            this.elongate();
-            this.render();
+        for (let i = startingLength - 2; i >= 0; i--) {
+            this.segments.push({ x: i, y: y });
         }
         this.eatFoodCallback = f => f;
         this.collideCallback = f => f;
+    }
+
+    get lastSegment() {
+        return this.segments[this.segments.length - 1];
     }
 
     render() {
@@ -49,20 +47,14 @@ class SnakeObject extends GameObject {
 
     move(direction) {
         this.currentDirection = direction;
-        let lastPos = this.segments[this.segments.length - 1];
-        clearDisplayCell(lastPos.x, lastPos.y);
 
-        for (let i = this.segments.length - 1; i > 0; i--) {
-        // for (let i = 0; i < this.segments.length - 1; i++) {
-            // let pos = this.segments[i - 1];
-            // this.segments[i].move(pos.x, pos.y);
-            this.segments[i].x = this.segments[i - 1].x;
-            this.segments[i].y = this.segments[i - 1].y;
-        }
-        // this.segments[0].move(this.x, this.y);
-        this.segments[0].x = this.x;
-        this.segments[0].y = this.y;
-        switch (direction) {
+        let lastSegment = this.segments[this.segments.length - 1];
+        lastSegment.x = this.x;
+        lastSegment.y = this.y;
+        
+        this.segments.unshift(this.segments.pop());
+        
+        switch (this.currentDirection) {
             case 'up':
                 this.y--;
                 break;
@@ -76,33 +68,16 @@ class SnakeObject extends GameObject {
                 this.x--;
                 break;
         }
-        // this.render();
     }
 
-    elongate() {
+    growTail() {
         this.segments.unshift({ x: this.x, y: this.y });
-
-        switch(this.currentDirection) {
-            case 'up':
-                this.y--;
-                break;
-            case 'right':
-                this.x++;
-                break;
-            case 'down':
-                this.y++;
-                break;
-            case 'left':
-                this.x--;
-                break;
-        }
     }
 
     checkSelfCollision() {
         for (let s of this.segments) {
             if (this.x === s.x && this.y === s.y) {
                 this.collideCallback();
-                // throw new Error("whoops! you eat yourself");
             }
         }
     }
@@ -110,17 +85,13 @@ class SnakeObject extends GameObject {
 
 class SnakeGame {
 
-    constructor(snakeX, snakeY, snakeInitialLength, initialDirection, fieldSize, speed) {
+    constructor(snakeX=2, snakeY=0, snakeInitialLength=3, initialDirection="right", fieldSize=15, speed=150) {
 
         this._gameDisplay = document.querySelector(".game__field");
         this._emptyCell = `<div class="game__field-cell"></div>`;
-        this._fieldSize = 15;
+        this._fieldSize = fieldSize;
 
-        this._gameDisplay.innerHTML = _emptyCell.repeat(_fieldSize ** 2);
-
-        this.getDisplayCell = (x, y) => _gameDisplay.children[x % _fieldSize + (y % _fieldSize) * _fieldSize];
-
-        this.clearDisplayCell = (x, y) => { getDisplayCell(x, y).removeAttribute("style"); }
+        this._gameDisplay.innerHTML = this._emptyCell.repeat(this._fieldSize ** 2);
 
         this.keyDirectionSheet = {
             "w": "up",
@@ -147,120 +118,80 @@ class SnakeGame {
         ];
 
         GameObject.renderCallback = (x, y, skin) => {
-            getDisplayCell(x, y).style.setProperty('background-image', `url(${skin})`);
+            try {
+                this.getDisplayCell(x, y).style.setProperty('background-image', `url(${skin})`);
+            }
+            catch {
+                debugger;
+            }
         };
         
         this.keyDirection = "right";
 
         this._scoreSpan = document.querySelector(".game__stat_score");
 
-        this.snake = new SnakeObject(x=snakeX, y=snakeY, startingLength=snakeInitialLength, initialDirection=initialDirection);
+        this.snake = new SnakeObject(snakeX, snakeY, snakeInitialLength, initialDirection);
+        this.snake.collideCallback = () => {
+            clearInterval(this.gameCycleInterval);
+            confirm(`!GAME OVER!\nyou eat yourself\n\nscore: ${this._scoreSpan.dataset.value}`);
+            location.reload();
+        }
         this.snake.render();
-        this.foodItem = new GameObject(10, 0, foodSkins[0]);
+        this.foodItem = new GameObject(10, 0, this.foodSkins[0]);
         this.foodItem.render();
         
-        setInterval(() => {
+        this.gameCycleInterval = setInterval(() => {
             this.gameCycle();
         }, speed);
 
-        document.addEventListener("keypress", function(event) {
-            let pressedDirection = keyDirectionSheet[event.key];
-            if (oppositeDirections[pressedDirection] === keyDirection) {
+        document.addEventListener("keypress", (event) => {
+            let pressedDirection = this.keyDirectionSheet[event.key];
+            if (this.oppositeDirections[pressedDirection] === this.keyDirection) {
                 return;
             }
-            keyDirection = pressedDirection;
+            this.keyDirection = pressedDirection;
         });
     }
 
+    getDisplayCell(x, y) {
+        return this._gameDisplay.children[x + y * this._fieldSize];
+    }
+
+    clearDisplayCell(x, y) {
+        try {
+            this.getDisplayCell(x, y).removeAttribute("style");
+        }
+        catch {
+            debugger;
+        }
+    }
+
+    normolizeSnakePosition() {
+        this.snake.x %= this._fieldSize;
+        this.snake.y %= this._fieldSize;
+        this.snake.x < 0 ? this.snake.x += this._fieldSize : 0;
+        this.snake.y < 0 ? this.snake.y += this._fieldSize : 0; 
+    }
+
     gameCycle() {
-        if(snake.x % _fieldSize === foodItem.x % _fieldSize && snake.y % _fieldSize === foodItem.y % _fieldSize) {
-            snake.elongate();
+        if(this.snake.x === this.foodItem.x && this.snake.y === this.foodItem.y) {
+            this.snake.growTail();
             
-            foodItem.skin = foodSkins[((foodSkins.length - 1) * Math.random()).toPrecision(1)];
-            foodItem.x = ((_fieldSize - 1) * Math.random()).toPrecision(1);
-            foodItem.y = ((_fieldSize - 1) * Math.random()).toPrecision(1);
-            foodItem.render();
+            this.foodItem.skin = this.foodSkins[Math.floor(this.foodSkins.length * Math.random())];
+            this.foodItem.x = Math.floor(this._fieldSize * Math.random());
+            this.foodItem.y = Math.floor(this._fieldSize * Math.random());
+            this.foodItem.render();
     
-            _scoreSpan.dataset.value = Number(_scoreSpan.dataset.value) + 10;
+            this._scoreSpan.dataset.value = Number(this._scoreSpan.dataset.value) + 10;
         }
-        else {
-            snake.move(keyDirection);
-        }
-        snake.render();
-        foodItem.render();
+        let tailToClear = this.snake.lastSegment;
+        this.clearDisplayCell(tailToClear.x, tailToClear.y);
+        this.snake.move(this.keyDirection);
+        this.normolizeSnakePosition();
+        this.foodItem.render();
+        this.snake.render();
+        this.snake.checkSelfCollision()
     }
 }
 
-const _gameDisplay = document.querySelector(".game__field");
-const _emptyCell = `<div class="game__field-cell"></div>`;
-const _fieldSize = 15;
-
-_gameDisplay.innerHTML = _emptyCell.repeat(_fieldSize ** 2);
-
-const getDisplayCell = (x, y) => _gameDisplay.children[x % _fieldSize + (y % _fieldSize) * _fieldSize];
-
-const clearDisplayCell = (x, y) => { getDisplayCell(x, y).removeAttribute("style"); }
-
-const keyDirectionSheet = {
-    "w": "up",
-    "d": "right",
-    "s": "down",
-    "a": "left"
-};
-
-const oppositeDirections = {
-    "up": "down",
-    "down": "up",
-    "left": "right",
-    "right": "left"
-};
-
-const foodSkins = [
-    './sources/svg/apple.svg',
-    './sources/svg/lemon.svg',
-    './sources/svg/orange.svg',
-    './sources/svg/pear.svg',
-    './sources/svg/pineapple.svg',
-    './sources/svg/plum.svg',
-    './sources/svg/strawberry.svg'
-];
-
-GameObject.renderCallback = (x, y, skin) => {
-    getDisplayCell(x, y).style.setProperty('background-image', `url(${skin})`);
-};
-
-const _scoreSpan = document.querySelector(".game__stat_score");
-
-let keyDirection = "right";
-
-let foodItem = new GameObject(10, 0, foodSkins[0]);
-foodItem.render();
-let snake = new SnakeObject();
-snake.render();
-
-let gameCycle = setInterval(() => {
-    // bro seriously, do sth about your movement system. this is just trash
-    if(snake.x % _fieldSize === foodItem.x % _fieldSize && snake.y % _fieldSize === foodItem.y % _fieldSize) {
-        snake.elongate();
-        
-        foodItem.skin = foodSkins[((foodSkins.length - 1) * Math.random()).toPrecision(1)];
-        foodItem.x = ((_fieldSize - 1) * Math.random()).toPrecision(1);
-        foodItem.y = ((_fieldSize - 1) * Math.random()).toPrecision(1);
-        foodItem.render();
-
-        _scoreSpan.dataset.value = Number(_scoreSpan.dataset.value) + 10;
-    }
-    else {
-        snake.move(keyDirection);
-    }
-    snake.render();
-    foodItem.render();
-}, 100);
-
-document.addEventListener("keypress", function (event) {
-    let pressedDirection = keyDirectionSheet[event.key];
-    if (oppositeDirections[pressedDirection] === keyDirection) {
-        return;
-    }
-    keyDirection = pressedDirection;
-});
+new SnakeGame();
