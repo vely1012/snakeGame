@@ -23,6 +23,7 @@ class GameObject {
 }
 
 class SnakeObject extends GameObject {
+    
     constructor(x=2, y=0, startingLength=3, initialDirection="right") {
         super(x, y, "./sources/svg/snake_head.svg");
         this.currentDirection = initialDirection;
@@ -85,8 +86,7 @@ class SnakeObject extends GameObject {
 
 class SnakeGame {
 
-    constructor(snakeX=2, snakeY=0, snakeInitialLength=3, initialDirection="right", fieldSize=15, speed=150) {
-
+    constructor(snakeX=2, snakeY=0, snakeInitialLength=3, initialDirection="right", fieldSize=15, speed=100) {
         this._gameDisplay = document.querySelector(".game__field");
         this._emptyCell = `<div class="game__field-cell"></div>`;
         this._fieldSize = fieldSize;
@@ -127,13 +127,14 @@ class SnakeGame {
         };
         
         this.keyDirection = "right";
+        this.directionChanged = false;
 
         this._scoreSpan = document.querySelector(".game__stat_score");
 
         this.snake = new SnakeObject(snakeX, snakeY, snakeInitialLength, initialDirection);
         this.snake.collideCallback = () => {
             clearInterval(this.gameCycleInterval);
-            confirm(`!GAME OVER!\nyou eat yourself\n\nscore: ${this._scoreSpan.dataset.value}`);
+            alert(`GAME OVER! you eat yourself\n\nscore: ${this._scoreSpan.dataset.value}`);
             location.reload();
         }
         this.snake.render();
@@ -145,11 +146,15 @@ class SnakeGame {
         }, speed);
 
         document.addEventListener("keypress", (event) => {
+            if(this.directionChanged) {
+                return;
+            }
             let pressedDirection = this.keyDirectionSheet[event.key];
             if (this.oppositeDirections[pressedDirection] === this.keyDirection) {
                 return;
             }
             this.keyDirection = pressedDirection;
+            this.directionChanged = true;
         });
     }
 
@@ -166,7 +171,7 @@ class SnakeGame {
         }
     }
 
-    normolizeSnakePosition() {
+    normalizeSnakePosition() {
         this.snake.x %= this._fieldSize;
         this.snake.y %= this._fieldSize;
         this.snake.x < 0 ? this.snake.x += this._fieldSize : 0;
@@ -186,11 +191,15 @@ class SnakeGame {
         }
         let tailToClear = this.snake.lastSegment;
         this.clearDisplayCell(tailToClear.x, tailToClear.y);
+
         this.snake.move(this.keyDirection);
-        this.normolizeSnakePosition();
+        this.directionChanged = false;
+        this.normalizeSnakePosition();
+
         this.foodItem.render();
         this.snake.render();
-        this.snake.checkSelfCollision()
+
+        this.snake.checkSelfCollision();
     }
 }
 
