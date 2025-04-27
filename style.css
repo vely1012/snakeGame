@@ -1,12 +1,81 @@
+/* -------- preps -------- */
+
 body {
     font-family: monospace;
+    margin: 0;
 }
+
+input, button {
+    font-family: monospace;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 0;
+}
+
+/* -------- game -------- */
+
 .wrapper {
     margin: 0 auto;
+    max-width: 1980px;
 }
 
 .game {
     height: 100vh;
+    padding: 30px;
+}
+
+.game__settings-wrapper {
+    position: absolute;
+    z-index: 1;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+
+    background-color: #0005;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.game__settings {
+    padding: 20px;
+
+    background-color: white;
+    outline: solid 3px black;
+    outline-offset: -10px;
+}
+
+.game__settings-title {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.game__settings-section {
+    display: grid;
+    grid-template-columns:  1fr 1fr;
+    gap: 5px;
+
+    margin-top: 10px;
+}
+
+.game__settings-header {
+    margin-bottom: 10px;
+}
+
+.game__settings-row {
+    margin-top: 5px;
+}
+
+.game__settings-btn {
+    position: absolute;
+    right: 20px;
+    top: 20px;
 }
 
 .game__title {
@@ -37,12 +106,15 @@ body {
 }
 
 .game__field {
-    --cell-size: 5vh;
+    --cell-size: 25px;
+    --col-count: 15;
+    --row-count: 15;
 
     height: 80%;
     display: grid;
-    grid-template-columns: repeat(15, var(--cell-size));
-    grid-auto-rows: var(--cell-size);
+    grid-template-columns: repeat(var(--col-count), var(--cell-size));
+    grid-template-rows: repeat(var(--row-count), var(--cell-size));
+    /* grid-auto-rows: var(--cell-size); */
     justify-content: center;
     
     border: 3px solid rgb(45, 0, 113);
@@ -51,10 +123,16 @@ body {
 .game__field-cell {
     grid-column: span 1;
     grid-row: span 1;
-    box-sizing: border-box;
     background-color: gray;
-    border: 3px solid black;
+    border: 1.5px solid black;
 
     background-size: contain;
     background-position: center center;
+}
+
+
+
+/* -------- final preps -------- */
+.hidden {
+    display: none;
 }

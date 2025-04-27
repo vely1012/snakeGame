@@ -9,6 +9,37 @@
 <body>
     <div class="wrapper">
         <main class="game">
+            <div class="game__settings-wrapper hidden" id="settings-wrapper1">
+                <form action="" class="game__settings">
+                    <h2 class="game__settings-title">Settings</h2>
+                    <h3 class="game__settings-header">Field settings</h3>
+                    <div class="game__settings-section">
+                        <label for="field-width-input">width</label>
+                        <input type="number" name="field width input" id="field-width-input" data-prop-name="fieldWidth" value="10">
+                        <label for="field-height-input">height</label>
+                        <input type="number" name="field height input" id="field-height-input" data-prop-name="fieldHeight" value="10">
+                        <label for="cell-size-input">cell size (px)</label>
+                        <input type="number" name="cell size input" id="cell-size-input" data-prop-name="cellSize" value="40">
+                    </div>
+                    <br>
+                    <h3 class="game__settings-header">Snake settings</h3>
+                    <div class="game__settings-section">
+                        <label for="snake-speed-input">speed</label>
+                        <input type="number" name="snake speed input" id="snake-speed-input" data-prop-name="speed" value="300">
+                        <label for="snake-length-input">length</label>
+                        <input type="number" name="snake length input" id="snake-length-input" data-prop-name="snakeInitialLength" value="6">
+                        <label for="snake-x-input">spawn x</label>
+                        <input type="number" name="snake x input" id="snake-x-input" data-prop-name="snakeInitialX" value="3">
+                        <label for="snake-y-input">spawn y</label>
+                        <input type="number" name="snake y input" id="snake-y-input" data-prop-name="snakeInitialY" value="2">
+                    </div>
+                    <div class="game__settings-section">
+                        <button type="button" id="deny-settings-btn1">cancel</button>
+                        <button type="submit" class="game__settings-submit-btn" id="confirm-settings-btn1">ok</button>
+                    </div>
+                </form>
+            </div>
+            <button type="button" class="game__settings-btn" id="toggle-settings-btn1" onclick="toggleSettings()">settings</button>
             <h1 class="game__title">Snake game</h1>
             <div class="game__stats">
                 <span class="game__stat game__stat_score" data-value="0">current score: </span>
@@ -19,5 +50,9 @@
         </main>
     </div>
     <script src="main.js"></script>
+    <script src="settings.js"></script>
+    <script>        
+        let g = new SnakeGame();
+    </script>
 </body>
 </html>
