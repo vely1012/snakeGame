@@ -13,18 +13,18 @@ function confirmSettings(event) {
         el ? newPreferences[p] = el.value : 0;
     }
     g.setupGamePreferences(newPreferences);
-    g.setupGameSession();
-    g.start();
+    // g.setupGameSession();
+    // g.start();
     settingsWrapper.classList.toggle('hidden');
     event.preventDefault();
 }
 
 function denySettingChanges(event) {
     settingsWrapper.classList.toggle('hidden');
-    g.start();
+    // g.start();
     event.preventDefault();
 }
 
 document.querySelector('#toggle-settings-btn1').addEventListener('onclick', toggleSettings);
 settingsForm.addEventListener('submit', confirmSettings);
-document.querySelector('#deny-settings-btn1').addEventListener('click', denySettingChanges); // why 'onclick does not work????'
+document.querySelector('#deny-settings-btn1').addEventListener('click', denySettingChanges); // why 'onclick' does not work????

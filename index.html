@@ -25,13 +25,22 @@
                     <h3 class="game__settings-header">Snake settings</h3>
                     <div class="game__settings-section">
                         <label for="snake-speed-input">speed</label>
-                        <input type="number" name="snake speed input" id="snake-speed-input" data-prop-name="speed" value="300">
+                        <input type="number" name="snake speed input" id="snake-speed-input" data-prop-name="speed" value="100">
                         <label for="snake-length-input">length</label>
-                        <input type="number" name="snake length input" id="snake-length-input" data-prop-name="snakeInitialLength" value="6">
+                        <input type="number" name="snake length input" id="snake-length-input" data-prop-name="snakeInitialLength" value="3">
                         <label for="snake-x-input">spawn x</label>
-                        <input type="number" name="snake x input" id="snake-x-input" data-prop-name="snakeInitialX" value="3">
+                        <input type="number" name="snake x input" id="snake-x-input" data-prop-name="snakeInitialX" value="0">
                         <label for="snake-y-input">spawn y</label>
-                        <input type="number" name="snake y input" id="snake-y-input" data-prop-name="snakeInitialY" value="2">
+                        <input type="number" name="snake y input" id="snake-y-input" data-prop-name="snakeInitialY" value="0">
+                        <label for="snake-init-dir-input">initial direction</label>
+                        <input type="text" name="snake initial direction input" id="snake-init-dir-input" list="directionList" data-prop-name="initialDirection" value="right">
+                        <!-- <input id="combobox-field1" class="combobox-field" type="text" list="exampleList" placeholder="Почти каждый день"> -->
+                        <datalist id="directionList">
+                            <option>right</option>
+                            <option>left</option>
+                            <option>up</option>
+                            <option>down</option>
+                        </datalist>
                     </div>
                     <div class="game__settings-section">
                         <button type="button" id="deny-settings-btn1">cancel</button>
@@ -53,6 +62,19 @@
     <script src="settings.js"></script>
     <script>        
         let g = new SnakeGame();
+        document.addEventListener("keypress", function(event) {
+            if(event.key == " ") {
+                g.setupGameSession();
+                g.start();
+            }
+            if(event.key == "f") {
+                g.pause();
+            }
+        });
+        
+        window.onload = function() {
+            alert("press space key to start the game");
+        };
     </script>
 </body>
 </html>

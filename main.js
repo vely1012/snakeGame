@@ -26,13 +26,13 @@ class SnakeObject extends GameObject {
     
     static defaultCollisionCallback() {};
     
-    constructor(x=2, y=0, startingLength=3, initialDirection="right") {
+    constructor(x=2, y=0, /* startingLength=3, */ initialDirection="right") {
         super(x, y, "./sources/svg/snake_head.svg");
         this.currentDirection = initialDirection;
         this.segments = [];
-        for (let i = startingLength - 2; i >= 0; i--) {
-            this.segments.push({ x: i, y: y });
-        }
+        // for (let i = startingLength - 2; i >= 0; i--) {
+        //     this.segments.push({ x: i, y: y });
+        // }
         this.collisionCallback = SnakeObject.defaultCollisionCallback;
     }
 
@@ -72,7 +72,7 @@ class SnakeObject extends GameObject {
     }
 
     growTail() {
-        this.segments.unshift({ x: this.x, y: this.y });
+        this.segments.push({ x: this.x, y: this.y });
     }
 
     checkSelfCollision() {
@@ -86,22 +86,37 @@ class SnakeObject extends GameObject {
 
 class SnakeGame {
 
+    static defaultPreferences = {
+        fieldWidth: 10,
+        fieldHeight: 10,
+        cellSize: 40,
+        snakeX: 0,
+        snakeY: 0,
+        snakeInitialLength: 3,
+        initialDirection: "right",
+        speed: 150,
+        
+    };
+
     constructor(fieldWidth=10, fieldHeight=6, cellSize=40, snakeX=2, snakeY=0, snakeInitialLength=3, speed=400) {
         this._gameDisplay = document.querySelector(".game__field");
-        
-        this.fieldWidth = fieldWidth;
-        this.fieldHeight = fieldHeight;
-        this.speed = speed;
-        
-        this.cellSize = cellSize;
         this._scoreSpan = document.querySelector(".game__stat_score");
         this._recordSpan = document.querySelector(".game__stat_record");
         this._emptyCell = `<div class="game__field-cell"></div>`;
+        
+        // this.fieldWidth = fieldWidth;
+        // this.fieldHeight = fieldHeight;
+        // this.speed = speed;
+        
+        // this.cellSize = cellSize;
+        
 
-        this.snakeInitialX = snakeX;
-        this.snakeInitialY = snakeY;
-        this.snakeInitialLength = snakeInitialLength;
-        this._initialDirection = "right";
+        // this.snakeInitialX = snakeX;
+        // this.snakeInitialY = snakeY;
+        // this.snakeInitialLength = snakeInitialLength;
+        // this.initialDirection = "left";
+
+        // this.leftToGrow = snakeInitialLength - 1;
 
         this._keyDirectionSheet = {
             "w": "up",
@@ -127,7 +142,9 @@ class SnakeGame {
             './sources/svg/strawberry.svg'
         ];
 
-        this._preferences = [ "fieldWidth", "fieldHeight", "cellSize", "snakeInitialX", "snakeInitialY", "snakeInitialLength", "speed"];
+        this._preferences = [ "fieldWidth", "fieldHeight", "cellSize", "snakeInitialX", "snakeInitialY", "snakeInitialLength", "speed", "initialDirection"];
+
+        this.setupGamePreferences(SnakeGame.defaultPreferences);
 
         GameObject.renderCallback = (x, y, skin) => { this.getDisplayCell(x, y).style.setProperty('background-image', `url(${skin})`) };
         SnakeObject.defaultCollisionCallback = () => {
@@ -138,8 +155,8 @@ class SnakeGame {
                 this._recordSpan.dataset.value = this._scoreSpan.dataset.value;
             }
             this._scoreSpan.dataset.value = 0;
-            this.setupGameSession();
-            this.start();
+            // this.setupGameSession();
+            // this.start();
         };
 
         document.addEventListener("keypress", (event) => {
@@ -154,8 +171,8 @@ class SnakeGame {
             this.directionChanged = true;
         });
         
-        this.setupGameSession();
-        this.start();
+        // this.setupGameSession();
+        // this.start();
     }
 
     // maybe possible to generalize..
@@ -187,6 +204,8 @@ class SnakeGame {
 
     set snakeInitialLength(value) { +value > 0 ? this._snakeInitialLength = +value : 0; }
 
+    set initialDirection(value) { ["right", "left", "up", "down"].includes(value) ? this._initialDirection = value : 0; }
+
     set speed(value) { +value > 10 ? this._speed = +value : 0; }
 
 
@@ -196,7 +215,8 @@ class SnakeGame {
         this.keyDirection = this._initialDirection;
         this.directionChanged = false;
 
-        this.snake = new SnakeObject(this._snakeInitialX, this._snakeInitialY, this._snakeInitialLength, this._initialDirection);
+        this.snake = new SnakeObject(this._snakeInitialX, this._snakeInitialY, 1, this._initialDirection);
+        this.leftToGrow = this._snakeInitialLength - 1;
         this.foodItem = new GameObject(0, 0, this._foodSkins[0]);
         this.updateFoodItem();
     }
@@ -242,14 +262,43 @@ class SnakeGame {
         this.foodItem.y = Math.floor(this._fieldHeight * Math.random());
     }
 
+    // previous iteration. keep Just in case idk
+
+    // gameCycle() {
+    //     if(this.snake.x === this.foodItem.x && this.snake.y === this.foodItem.y) {
+    //         this.snake.growTail();
+    //         this.updateFoodItem();
+    //         this.foodItem.render();
+    
+    //         this._scoreSpan.dataset.value = Number(this._scoreSpan.dataset.value) + 10;
+    //     }
+    //     let tailToClear = this.snake.lastSegment;
+    //     this.clearDisplayCell(tailToClear.x, tailToClear.y);
+
+    //     this.snake.move(this.keyDirection);
+    //     this.directionChanged = false;
+    //     this.normalizeSnakePosition();
+
+    //     this.foodItem.render();
+    //     this.snake.render();
+
+    //     this.snake.checkSelfCollision();
+    // }
+
     gameCycle() {
         if(this.snake.x === this.foodItem.x && this.snake.y === this.foodItem.y) {
-            this.snake.growTail();
+            this.leftToGrow++;
             this.updateFoodItem();
             this.foodItem.render();
     
             this._scoreSpan.dataset.value = Number(this._scoreSpan.dataset.value) + 10;
         }
+        
+        if(this.leftToGrow) {
+            this.snake.growTail();
+            this.leftToGrow--;
+        }
+
         let tailToClear = this.snake.lastSegment;
         this.clearDisplayCell(tailToClear.x, tailToClear.y);
 
